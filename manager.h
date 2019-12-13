@@ -35,15 +35,6 @@ struct frameList {
 	int pageSize;
 };
 
-
-struct Process_Queue {
-	int capacity;
-	int size;
-	int front;
-	int rear;
-	vector<PROCESS> elements;
-};
-
 class PROCESS{
 public:
 	int pid;
@@ -55,6 +46,16 @@ public:
 	int is_active;
 	int time_finished;
 };
+
+struct inputQueue {
+	int capacity;
+	int size;
+	int front;
+	int rear;
+	vector<PROCESS> elements;
+};
+
+
 
 /////////////////////////////////////////////////
 
@@ -182,9 +183,8 @@ frameList fitProcIntoMem(frameList list, PROCESS process) {
 }
 
 
-
-Process_Queue create_process_queue(int length) {
-	Process_Queue q;
+inputQueue create_process_queue(int length) {
+	inputQueue q;
 	q.elements.resize(length);
 	q.size = 0;
 	q.capacity = length;
@@ -194,7 +194,7 @@ Process_Queue create_process_queue(int length) {
 	return q;
 }
 
-Process_Queue queued_process(Process_Queue q, PROCESS proc) {
+inputQueue queued_process(inputQueue q, PROCESS proc) {
 	if (q.size == q.capacity) {
 		cout << "ERROR: queue is full to capacity!" << endl;
 		exit(2);
@@ -210,15 +210,15 @@ Process_Queue queued_process(Process_Queue q, PROCESS proc) {
 	return q;
 }
 
-PROCESS peek_queue_at_index(Process_Queue q, int index) {
+PROCESS peek_queue_at_index(inputQueue q, int index) {
 	return q.elements[index];
 }
 
-int iterate_queue_index(Process_Queue q, int index) {
+int iterate_queue_index(inputQueue q, int index) {
 	return q.front + index;
 }
 
-void print_process_queue(Process_Queue q) {
+void print_process_queue(inputQueue q) {
 	PROCESS proc;
 
 	cout << "\tInput queue: [ ";
@@ -231,12 +231,12 @@ void print_process_queue(Process_Queue q) {
 
 
 
-int queue_has_next(Process_Queue q) {
+int queue_has_next(inputQueue q) {
 	return q.size == 0 ? 0 : 1;
 }
 
 
-void dequeue_proc(Process_Queue q) {
+void dequeue_proc(inputQueue q) {
 	if (!queue_has_next(q)) {
 		cout << "ERROR: queue is empty, can't dequeue anything." << endl;
 		exit(2);
@@ -252,7 +252,7 @@ void dequeue_proc(Process_Queue q) {
 
 
 
-Process_Queue dequeue_proc_at_index(Process_Queue q, int index) {
+inputQueue dequeue_proc_at_index(inputQueue q, int index) {
 	int prev = 0;
 	for (int i = 0; i < q.size; i += 1) {
 		if (i > index) {
@@ -267,4 +267,3 @@ Process_Queue dequeue_proc_at_index(Process_Queue q, int index) {
 
 	return q;
 }
-
