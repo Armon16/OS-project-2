@@ -12,30 +12,29 @@ const int MAX_RUNTIME = 100000;
 const int MAX_MEM_SIZE = 30000;
 
 int number_of_proccesses = 0;
-int page_size = 0;
-int memory_size = 0;
+int pageSize = 0;
+int memSize = 0;
 string file_name = "";
 int last_announcement = -1;
-vector<PROCESS> process_list;
+vector<PROCESS> procList;
 inputQueue waitList;
 frameList framelist;
 
 
 int main(){
- //collects the user input
+ //get user input
     while (true){
         cout << "Please enter memory size(0-30000): ";
-        cin >> memory_size;
+        cin >> memSize;
         cout << "Please enter page size: ";
-        cin >> page_size;
-        if (memory_size > 0 && page_size > 0&& (memory_size)% (page_size) == 0 && memory_size <= MAX_RUNTIME)
+        cin >> pageSize;
+        if (memSize > 0 && pageSize > 0 && (memSize) % (pageSize) == 0 && memSize <= MAX_RUNTIME)
         cout << "Error: " << "Memory size/page size out of bounds" << endl;
             break;
         
     }
 
-    //reads values from the input file into a shared process list
-    
+    //read values from the input file into process list
     cout << "Please enter the file name: ";
     cin >> file_name;
     ifstream myFile;
@@ -46,13 +45,16 @@ int main(){
     if (myFile.is_open()) {
         //gets number of proccesses
         myFile >> number_of_proccesses;
-        process_list.resize(number_of_proccesses);
+        procList.resize(number_of_proccesses);
 
         for(int i = 0; i < number_of_proccesses; i++){
             //set process id's
-            myFile >> process_list[i].pid;
+            myFile >> procList[i].pid;
+            
             //set arrival time and life time
-            myFile >> process_list[i].arrival_time >> process_list[i].life_time;
+            myFile >> procList[i].arrivalTime;
+            myFile >> procList[i].lifeTime;
+            
             //set memory sizes
             int memory_request_number = 0;
             int memory_request_size[10000] = {0};
@@ -62,11 +64,11 @@ int main(){
                 myFile >> memory_request_size[j];
                 sum += memory_request_size[j];
             }
-            process_list[i].memoryRequest = sum;
+            procList[i].memoryRequest = sum;
             //init other data in process list for later use
-            process_list[i].is_active = 0;
-            process_list[i].time_added_to_memory = -1;
-            process_list[i].time_finished = -1;
+            procList[i].notAvailable = true;
+            procList[i].timePutInMem = -1;
+            procList[i].time_finished = -1;
         }
     }
     myFile.close();
@@ -75,7 +77,7 @@ int main(){
     waitList = create_process_queue(number_of_proccesses);
 
     //create a shared framelist
-    framelist = createFrameList(memory_size / page_size, page_size);
+    framelist = createFrameList(memSize / pageSize, pageSize);
     
     long currentTime = 0;
     int running = 1;
@@ -84,8 +86,8 @@ int main(){
         //queues any process that have arrived
         PROCESS process;
     for (int i = 0; i < number_of_proccesses; i += 1){
-        process = process_list[i];
-        if (process.arrival_time == currentTime){
+        process = procList[i];
+        if (process.arrivalTime == currentTime){
             string print_time = get_announcement_prefix(currentTime);
             cout << print_time << "Process " << process.pid << " arrives" << endl;
             waitList = queued_process(waitList, process);
@@ -94,14 +96,14 @@ int main(){
     }
         //removes completed processes
         int i, time_spent_in_memory;
-	// dequeue any procs that need it
+	// dequeue any procs that need to be dequeue'd
 	for (i = 0; i < number_of_proccesses; i++) {
-		time_spent_in_memory = currentTime - process_list[i].time_added_to_memory;
-		if (process_list[i].is_active && (time_spent_in_memory >= process_list[i].life_time)) {
-			cout << get_announcement_prefix(currentTime)  << "Process " << process_list[i].pid << " completes" << endl;
-			process_list[i].is_active = 0;
-			process_list[i].time_finished = currentTime;
-			framelist = freeMemoryForPID(framelist, process_list[i].pid);
+		time_spent_in_memory = currentTime - procList[i].timePutInMem;
+		if (procList[i].notAvailable && (time_spent_in_memory >= procList[i].lifeTime)) {
+			cout << get_announcement_prefix(currentTime)  << "Process " << procList[i].pid << " completes" << endl;
+			procList[i].notAvailable = true;
+			procList[i].time_finished = currentTime;
+			framelist = freeMemoryForPID(framelist, procList[i].pid);
 			printFrameList(framelist);
 		}
 	}
@@ -123,9 +125,9 @@ int main(){
 
 			framelist = fitProcIntoMem(framelist, newProcess);
 			for (int j = 0; j < number_of_proccesses; j++) {
-				if (process_list[j].pid == newProcess.pid) {
-					process_list[j].is_active = 1;
-					process_list[j].time_added_to_memory = currentTime;
+				if (procList[j].pid == newProcess.pid) {
+					procList[j].notAvailable = false;
+					procList[j].timePutInMem = currentTime;
 					waitList = dequeue_proc_at_index(waitList, i);
 				}
 			}
@@ -165,18 +167,16 @@ string get_announcement_prefix(int currentTime){
 }
 
 
-void terminate_completed_process(int currentTime) {
-	
-}
+
 
 // prints the average turnaround time
 void print_turnaround_times() {
 	int i;
 	float total = 0;
 	for (i = 0; i < number_of_proccesses; i += 1) {
-		total += process_list[i].time_finished - process_list[i].arrival_time;
+		total += procList[i].time_finished - procList[i].arrivalTime;
 	}
-	cout << "Average Turnaround Time " << total / number_of_proccesses << endl;
+	cout << "Average Turn-around Time " << total / number_of_proccesses << endl;
 }
 
 
