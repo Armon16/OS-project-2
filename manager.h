@@ -1,6 +1,7 @@
 #pragma once
 #include<vector>
 #include <string>
+#include<queue>
 
 using namespace std;
 
@@ -38,12 +39,12 @@ struct frameList {
 class PROCESS{
 public:
 	int pid;
-	int arrival_time;
-	int life_time;
+	int arrivalTime;
+	int lifeTime;
 	int memoryRequest;
 
-	int time_added_to_memory;
-	int is_active;
+	int timePutInMem;
+	bool notAvailable;
 	int time_finished;
 };
 
@@ -182,9 +183,12 @@ frameList fitProcIntoMem(frameList list, PROCESS process) {
 	return list;
 }
 
-
 inputQueue create_process_queue(int length) {
+	//queue <inputQueue> q;
+	
 	inputQueue q;
+	
+	//Constructor to initialize all elements of intput queue
 	q.elements.resize(length);
 	q.size = 0;
 	q.capacity = length;
@@ -197,7 +201,7 @@ inputQueue create_process_queue(int length) {
 inputQueue queued_process(inputQueue q, PROCESS proc) {
 	if (q.size == q.capacity) {
 		cout << "ERROR: queue is full to capacity!" << endl;
-		exit(2);
+		exit(1);
 	}
 
 	q.size++;
