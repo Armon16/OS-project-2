@@ -4,8 +4,6 @@
 
     Armon Rahimi armon16@csu.fullerton.edu
     Arely De Leon arelydeleon97@csu.fullerton.edu
-    Maria Diaz mardiaz353@csu.fullerton.edu
-    Brianna Sharpe briannasharpe@csu.fullerton.edu
 
 (2)
 
